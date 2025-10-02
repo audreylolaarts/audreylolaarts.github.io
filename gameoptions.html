@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voronoi Links</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700&display=swap" rel="stylesheet">
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+        background: white;
+        font-family: 'Cormorant Garamond', serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .link-container {
+        text-align: center;
+        font-size: 28px;
+        line-height: 2;
+    }
+
+    .link-container a {
+        color: black;
+        text-decoration: underline;
+        transition: color 0.3s;
+    }
+
+    .link-container a:hover {
+        color: gray;
+    }
+
+    .arrow-right {
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 28px;
+        transform: translateX(0);
+        animation: bounceRight 1.5s infinite;
+    }
+
+    @keyframes bounceRight {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(15px); }
+    }
+</style>
+</head>
+<body>
+    <div class="link-container">
+        Click to play <span class="arrow-right">&#8594;</span> <br><br>
+        <a href="voronoi_spider.html">spider.</a> <br>
+        <a href="voronoi_water.html">water.</a> <br>
+        <a href="voronoiblackhole.html">black hole.</a> <br><br>
+        <a href="conclusion.html">conclusion</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Black Hole Voronoi</title>
+<!-- Import Cormorant Garamond -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700&display=swap" rel="stylesheet">
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: white;
+        font-family: 'Cormorant Garamond', serif;
+    }
+
+    .parent {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 100px;
+        z-index: 1000;
+    }
+
+    #press-space {
+        margin-top: 20px;
+        font-size: 28px;
+        color: #888888;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+
+    #bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 25px;
+        background: white;
+        font-size: 20px;
+        color: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Cormorant Garamond', serif;
+        z-index: 900;
+        opacity: 0;
+    }
+
+    #bottom-bar span {
+        margin: 0 10px;
+        cursor: default;
+    }
+
+    #bottom-bar span:hover {
+        color: gray;
+    }
+</style>
+</head>
+<body>
+
+<div class="parent" id="blackhole"></div>
+
+<div id="overlay">
+    black hole.
+    <div id="press-space">press spacebar</div>
+</div>
+
+<div id="bottom-bar">
+    <span>press f for faster</span>
+    <span>press s for slower</span>
+    <span>press w for whimsy</span>
+    <span>press c for code</span>
+    <span>press e to erase</span>
+    <span>press m for menu</span>
+</div>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6"></script>
+<script src="blackhole.js" type="text/javascript"></script>
+
+<script>
+    // Show "press spacebar" after 2 seconds
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('press-space').style.opacity = 1;
+        }, 2000);
+    });
+
+    function flashBottomBar(times = 3, interval = 300) {
+        const bar = document.getElementById('bottom-bar');
+        bar.style.opacity = 1;
+        let count = 0;
+        const flash = setInterval(() => {
+            if (count >= times * 2) { // each flash = black + white
+                clearInterval(flash);
+                bar.style.background = 'white';
+                bar.style.color = 'black';
+                return;
+            }
+            if (count % 2 === 0) {
+                bar.style.background = 'black';
+                bar.style.color = 'white';
+            } else {
+                bar.style.background = 'white';
+                bar.style.color = 'black';
+            }
+            count++;
+        }, interval);
+    }
+
+    // Hide overlay and show bottom bar after space
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            document.getElementById('overlay').style.display = 'none';
+            // Start flashing bottom bar after 5 seconds
+            setTimeout(() => {
+                flashBottomBar();
+            }, 5000);
+        }
+    });
+
+    // Reveal JS code when pressing 'c' (toggle)
+    let codeRevealed = false;
+    let codePreElement = null;
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === 'c') {
+            if (!codeRevealed) {
+                fetch('blackhole.js')
+                    .then(response => response.text())
+                    .then(data => {
+                        codePreElement = document.createElement('pre');
+                        codePreElement.textContent = data;
+                        codePreElement.style.position = 'fixed';
+                        codePreElement.style.top = '0';
+                        codePreElement.style.left = '0';
+                        codePreElement.style.width = '100vw';
+                        codePreElement.style.height = '100vh';
+                        codePreElement.style.background = 'white';
+                        codePreElement.style.overflow = 'auto';
+                        codePreElement.style.zIndex = '9999';
+                        document.body.appendChild(codePreElement);
+                        codeRevealed = true;
+                    });
+            } else {
+                if (codePreElement) {
+                    codePreElement.remove();
+                    codePreElement = null;
+                }
+                codeRevealed = false;
+            }
+        }
+    });
+
+    // Redirect to gameoptions.html when pressing 'm'
+    document.addEventListener("keydown", (e) => {
+        if (e.key === 'm') {
+            window.location.href = 'gameoptions.html';
+        }
+    });
+</script>
+
+</body>
+</html>
