@@ -9,6 +9,7 @@ push();
 
 	var canvas=createCanvas(windowWidth,windowHeight);
         canvas.parent('recipe-example');
+	cursor(img1);
 	noSmooth();
 	noLoop();
     background(255);
