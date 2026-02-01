@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700&display=swap" rel="stylesheet">
 <style>
-
-    
 html, body {
   height: 100%;
   margin: 0;
@@ -141,8 +139,8 @@ canvas {
   cursor: pointer;
 }
 .page4-anim {
-  opacity: 0;              /* hidden by default to avoid flash */
-  will-change: opacity;    /* hint for smoother animation */
+  opacity: 0;
+  will-change: opacity;
 }
 .fade-in { opacity: 0; animation: fadeIn 2s forwards; }
 .fade-in.delay-1 { animation-delay: 0.5s; }
@@ -156,7 +154,6 @@ canvas {
   transform: translateX(0);
   animation: bounceRight 1.5s infinite;
 }
-
 @keyframes bounceRight {
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(15px); }
@@ -165,7 +162,6 @@ canvas {
 </head>
 <body>
 <div class="scroll-container" id="scroll-container">
-
   <div class="section">
     <div class="grid1">
       <img src="assets/img1.png" alt="">
@@ -203,7 +199,6 @@ it reveals continuity across both sides of the line.<br>
     </div>
     <div class="scroll-arrow-next" id="next-arrow">&#8595;</div>
   </div>
-
 </div>
 
 <script>
@@ -406,11 +401,8 @@ function startFallingWords() {
       requestAnimationFrame(animate);
     } else if (!page3Enabled) {
       page3Enabled = true;
-
-      // Show Page 2 arrow after all words settled
       nextArrow.classList.add('show');
 
-      // Create Page 3 dynamically
       const page3 = document.createElement('div');
       page3.className = 'section';
       page3.innerHTML = `
@@ -439,24 +431,41 @@ function startFallingWords() {
   window.addEventListener('resize', resizeCanvas);
 
   nextArrow.addEventListener('click', () => {
-    if (page3Enabled) document.querySelector('.section:nth-child(3)').scrollIntoView({behavior: 'smooth'});
+    if (page3Enabled) {
+      const page3 = scrollContainer.querySelector('.section:nth-child(3)');
+      if (page3) page3.scrollIntoView({behavior: 'smooth'});
+    }
   });
 }
 
 async function fetchPapers() {
-  const url = `https://export.arxiv.org/api/query?search_query=ti:Voronoi&start=${startIndex}&max_results=50`;
-  startIndex += 50;
-  const response = await fetch(url);
-  const text = await response.text();
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(text, "application/xml");
-  const entries = [...xml.getElementsByTagName("entry")];
-  const papers = entries.map(e => ({
-    title: e.getElementsByTagName("title")[0].textContent.trim(),
-    summary: e.getElementsByTagName("summary")[0].textContent.trim(),
-    authors: [...e.getElementsByTagName("author")].map(a => a.getElementsByTagName("name")[0].textContent)
-  }));
-  paperPool.push(...papers);
+  try {
+    // Using CORS proxy to bypass CORS restrictions
+    const corsProxy = 'https://corsproxy.io/?';
+    const url = `${corsProxy}https://export.arxiv.org/api/query?search_query=ti:Voronoi&start=${startIndex}&max_results=50`;
+    startIndex += 50;
+    const response = await fetch(url);
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "application/xml");
+    const entries = [...xml.getElementsByTagName("entry")];
+    const papers = entries.map(e => ({
+      title: e.getElementsByTagName("title")[0].textContent.trim(),
+      summary: e.getElementsByTagName("summary")[0].textContent.trim(),
+      authors: [...e.getElementsByTagName("author")].map(a => a.getElementsByTagName("name")[0].textContent)
+    }));
+    paperPool.push(...papers);
+  } catch (error) {
+    console.error('Error fetching papers:', error);
+    // Fallback: add some sample papers if fetch fails
+    if (paperPool.length === 0) {
+      paperPool.push({
+        title: "Sample Voronoi Paper (API unavailable)",
+        summary: "The ArXiv API is currently unavailable due to CORS restrictions. This is a placeholder paper.",
+        authors: ["Sample Author"]
+      });
+    }
+  }
 }
 
 function setupPaperFetcher() {
@@ -468,8 +477,8 @@ function setupPaperFetcher() {
   btn.addEventListener('click', async () => {
     if (paperPool.length === 0) await fetchPapers();
     if (paperPool.length === 0) {
-      titleEl.textContent = "No more papers available.";
-      abstractEl.textContent = "";
+      titleEl.textContent = "Unable to fetch papers - CORS issue";
+      abstractEl.textContent = "The ArXiv API cannot be accessed directly from GitHub Pages due to CORS restrictions. Consider using a backend server or alternative API.";
       authorsEl.textContent = "";
       return;
     }
@@ -479,7 +488,9 @@ function setupPaperFetcher() {
     abstractEl.textContent = "Abstract: " + paper.summary;
     authorsEl.textContent = "Authors: " + paper.authors.join(", ");
   });
-}function addPage4(page3Arrow) {
+}
+
+function addPage4(page3Arrow) {
   const page4 = document.createElement('div');
   page4.className = 'section';
   page4.innerHTML = `
@@ -492,55 +503,44 @@ function setupPaperFetcher() {
            class="page4-anim" data-delay="delay-2" id="page4-title">
         The cosmic spiderweb: equivalence of cosmic, architectural and origami tessellations
       </div>
-      <div style="margin-bottom: 2rem" class="page4-anim" data-delay="delay-3" id="page4-abstract"> "For over 20 years, the term <b>‘cosmic web’</b> has guided our understanding of the large-scale arrangement of matter in the cosmos, accurately evoking the concept of a network of galaxies linked by filaments. But the physical correspondence between the cosmic web and structural engineering or textile <b>‘spiderwebs’</b> is even deeper than previously known, and also extends to origami tessellations. Here, we explain that in a good structure-formation approximation known as the adhesion model, <b>threads of the cosmic web form a spiderweb</b>, i.e. can be strung up to be entirely in tension. <br> The <b>Voronoi foam</b> concept has also been instrumental in shaping our understanding of the large-scale arrangement of matter and galaxies in the universe. Indeed, the arrangement of matter on large scales behaves in many respects like a <b>cellular system</b>." </div>
+      <div style="margin-bottom: 2rem" class="page4-anim" data-delay="delay-3" id="page4-abstract"> "For over 20 years, the term <b>'cosmic web'</b> has guided our understanding of the large-scale arrangement of matter in the cosmos, accurately evoking the concept of a network of galaxies linked by filaments. But the physical correspondence between the cosmic web and structural engineering or textile <b>'spiderwebs'</b> is even deeper than previously known, and also extends to origami tessellations. Here, we explain that in a good structure-formation approximation known as the adhesion model, <b>threads of the cosmic web form a spiderweb</b>, i.e. can be strung up to be entirely in tension. <br> The <b>Voronoi foam</b> concept has also been instrumental in shaping our understanding of the large-scale arrangement of matter and galaxies in the universe. Indeed, the arrangement of matter on large scales behaves in many respects like a <b>cellular system</b>." </div>
       <div style="font-size: 18px; color: #555; margin-bottom: 2rem"
            class="page4-anim" data-delay="delay-3" id="page4-authors">
         Authors: Mark C. Neyrinck, Johan Hidding, Marina Konstantatou and Rien van de Weygaert
       </div>
     </div>
-    <div class="scroll-arrow-next">&#8595;</div>
+    <div class="scroll-arrow-next" id="page4-arrow">&#8595;</div>
   `;
   scrollContainer.appendChild(page4);
 
   if (page3Arrow) page3Arrow.classList.add('show');
 
-  const arrow = page4.querySelector('.scroll-arrow-next');
+  const arrow = page4.querySelector('#page4-arrow');
 
-  // Observe when Page 4 enters viewport to start the fade-in animations
   const observer4 = new IntersectionObserver((entries, obs) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        // Use the entry.target (page4) to find animatable elements
         const els = entry.target.querySelectorAll('.page4-anim');
         els.forEach(el => {
           const delayClass = el.dataset.delay || '';
-          // add both classes at once so animation delay applies correctly
           if (delayClass) el.classList.add('fade-in', delayClass);
           else el.classList.add('fade-in');
         });
-
-        // show the page arrow after animations (adjust timing if you shorten fadeIn)
-        setTimeout(() => { arrow.classList.add('show'); }, 2500);
-
+        setTimeout(() => { 
+          arrow.classList.add('show');
+          arrow.addEventListener('click', () => {
+            const page5 = scrollContainer.querySelector('.section:nth-child(5)');
+            if (page5) page5.scrollIntoView({behavior:'smooth'});
+          });
+        }, 2500);
         obs.disconnect();
         addPage5();
       }
     });
-  }, { threshold: 0.35 }); // adjust threshold if you want earlier / later trigger
+  }, { threshold: 0.35 });
 
   observer4.observe(page4);
 }
-  // Observe when Page 4 enters viewport to trigger Page 5
-  const observer4 = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        observer4.disconnect();
-        addPage5();
-      }
-    });
-  }, { threshold: 0.5 });
-  observer4.observe(page4);
-
 
 function addPage5() {
   const page5 = document.createElement('div');
@@ -555,8 +555,6 @@ function addPage5() {
   `;
   scrollContainer.appendChild(page5);
 
-
-  // Style links
   const links = page5.querySelectorAll('a');
   links.forEach(link => {
     link.style.color = 'black';
@@ -566,8 +564,6 @@ function addPage5() {
     link.addEventListener('mouseout', () => link.style.color = 'black');
   });
 }
-
 </script>
 </body>
 </html>
-
