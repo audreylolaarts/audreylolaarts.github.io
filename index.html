@@ -138,6 +138,10 @@ canvas {
   background: white;
   cursor: pointer;
 }
+#load-paper:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
 .page4-anim {
   opacity: 0;
   will-change: opacity;
@@ -440,31 +444,30 @@ function startFallingWords() {
 
 async function fetchPapers() {
   try {
-    // Using CORS proxy to bypass CORS restrictions
-    const corsProxy = 'https://corsproxy.io/?';
-    const url = `${corsProxy}https://export.arxiv.org/api/query?search_query=ti:Voronoi&start=${startIndex}&max_results=50`;
-    startIndex += 50;
+    // Semantic Scholar API - no CORS restrictions, free to use
+    const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=Voronoi+tessellation+diagram&fields=title,abstract,authors&offset=${startIndex}&limit=100`;
+    startIndex += 100;
+    
     const response = await fetch(url);
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "application/xml");
-    const entries = [...xml.getElementsByTagName("entry")];
-    const papers = entries.map(e => ({
-      title: e.getElementsByTagName("title")[0].textContent.trim(),
-      summary: e.getElementsByTagName("summary")[0].textContent.trim(),
-      authors: [...e.getElementsByTagName("author")].map(a => a.getElementsByTagName("name")[0].textContent)
-    }));
-    paperPool.push(...papers);
+    const data = await response.json();
+    
+    if (data.data && data.data.length > 0) {
+      const papers = data.data
+        .filter(paper => paper.abstract && paper.abstract.length > 100) // Filter out papers without good abstracts
+        .map(paper => ({
+          title: paper.title,
+          summary: paper.abstract,
+          authors: paper.authors ? paper.authors.map(a => a.name) : ['Unknown']
+        }));
+      
+      paperPool.push(...papers);
+      console.log(`Fetched ${papers.length} papers from Semantic Scholar`);
+      return true;
+    }
+    return false;
   } catch (error) {
     console.error('Error fetching papers:', error);
-    // Fallback: add some sample papers if fetch fails
-    if (paperPool.length === 0) {
-      paperPool.push({
-        title: "Sample Voronoi Paper (API unavailable)",
-        summary: "The ArXiv API is currently unavailable due to CORS restrictions. This is a placeholder paper.",
-        authors: ["Sample Author"]
-      });
-    }
+    return false;
   }
 }
 
@@ -475,18 +478,32 @@ function setupPaperFetcher() {
   const authorsEl = document.getElementById('paper-authors');
 
   btn.addEventListener('click', async () => {
-    if (paperPool.length === 0) await fetchPapers();
-    if (paperPool.length === 0) {
-      titleEl.textContent = "Unable to fetch papers - CORS issue";
-      abstractEl.textContent = "The ArXiv API cannot be accessed directly from GitHub Pages due to CORS restrictions. Consider using a backend server or alternative API.";
-      authorsEl.textContent = "";
-      return;
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    
+    // Fetch more papers if we're running low
+    if (paperPool.length < 5) {
+      const success = await fetchPapers();
+      if (!success && paperPool.length === 0) {
+        titleEl.textContent = "Unable to fetch papers";
+        abstractEl.textContent = "The paper API is not responding. Please try again later.";
+        authorsEl.textContent = "";
+        btn.disabled = false;
+        btn.textContent = 'Keep clicking me for random papers on Voronoi Patterns';
+        return;
+      }
     }
-    const idx = Math.floor(Math.random() * paperPool.length);
-    const paper = paperPool.splice(idx, 1)[0];
-    titleEl.textContent = paper.title;
-    abstractEl.textContent = "Abstract: " + paper.summary;
-    authorsEl.textContent = "Authors: " + paper.authors.join(", ");
+    
+    if (paperPool.length > 0) {
+      const idx = Math.floor(Math.random() * paperPool.length);
+      const paper = paperPool.splice(idx, 1)[0];
+      titleEl.textContent = paper.title;
+      abstractEl.textContent = "Abstract: " + paper.summary;
+      authorsEl.textContent = "Authors: " + paper.authors.join(", ");
+    }
+    
+    btn.disabled = false;
+    btn.textContent = 'Keep clicking me for random papers on Voronoi Patterns';
   });
 }
 
